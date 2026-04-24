@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collections | LuxeFurnish</title>
+    <meta name="description" content="Explore our curated collections of premium, luxury furniture.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav id="navbar" class="scrolled">
+        <div class="logo">LuxeFurnish</div>
+        <ul class="nav-links">
+            <li><a href="index.html#home">Home</a></li>
+            <li><a href="collections.html">Collections</a></li>
+
+            <li><a href="contact.html">Contact</a></li>
+            <li id="userAuthLink"><a href="user-login.html" style="color: var(--primary);">Login</a></li>
+            <li><a href="login.html" class="btn btn-outline" style="padding: 8px 20px;">Admin</a></li>
+        </ul>
+    </nav>
+
+    <section id="collections" style="padding-top: 150px; min-height: 80vh;">
+        <div class="section-title">
+            <h2>Our Collections</h2>
+            <div class="underline"></div>
+            <p style="margin-top: 15px; color: var(--text-muted);">Curated pieces designed for the modern connoisseur.</p>
+        </div>
+
+        <div class="product-grid" id="productGrid">
+            <!-- Mock Products -->
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800" alt="Velvet Sofa">
+                </div>
+                <div class="product-info">
+                    <h3>Azure Velvet Sofa</h3>
+                    <p class="price">$1,299.00</p>
+                    <button class="btn btn-outline" style="margin-top: 15px; width: 100%; font-size: 0.9rem;">Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1581539250439-c96689b516dd?auto=format&fit=crop&q=80&w=800" alt="Modern Chair">
+                </div>
+                <div class="product-info">
+                    <h3>Nordic Oak Chair</h3>
+                    <p class="price">$450.00</p>
+                    <button class="btn btn-outline" style="margin-top: 15px; width: 100%; font-size: 0.9rem;">Add to Cart</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1538688540843-f43936657801?auto=format&fit=crop&q=80&w=800" alt="Coffee Table">
+                </div>
+                <div class="product-info">
+                    <h3>Sleek Marble Table</h3>
+                    <p class="price">$890.00</p>
+                    <button class="btn btn-outline" style="margin-top: 15px; width: 100%; font-size: 0.9rem;">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer style="padding: 50px 10%; text-align: center; border-top: 1px solid var(--glass-border);">
+        <div class="logo" style="margin-bottom: 20px;">LuxeFurnish</div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">&copy; 2024 LuxeFurnish Interiors. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Check if user is logged in to update navigation
+        const user = localStorage.getItem('adminUser');
+        if(user) {
+            const adminLink = document.querySelector('a[href="login.html"]');
+            if(adminLink) {
+                adminLink.textContent = 'Admin';
+                adminLink.href = 'admin.html';
+            }
+        }
+
+        // Check if regular user is logged in
+        const currentUser = localStorage.getItem('currentUser');
+        if(currentUser) {
+            const userAuthLink = document.getElementById('userAuthLink');
+            if(userAuthLink) {
+                userAuthLink.innerHTML = `<span style="color: var(--primary);"><i class="fas fa-user"></i> ${currentUser}</span>`;
+                userAuthLink.style.cursor = 'pointer';
+                userAuthLink.onclick = () => {
+                    if(confirm('Do you want to logout?')) {
+                        localStorage.removeItem('currentUser');
+                        location.reload();
+                    }
+                };
+            }
+        }
+
+        // Dynamic Product Loading
+        async function loadInventory() {
+            try {
+                const response = await fetch('/api/all-data');
+                const data = await response.json();
+                if(data.stock && data.stock.length > 0) {
+                    const grid = document.getElementById('productGrid');
+                    // data.stock.forEach(...)
+                }
+            } catch (err) {}
+        }
+        loadInventory();
+    </script>
+</body>
+</html>

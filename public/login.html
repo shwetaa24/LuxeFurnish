@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | LuxeFurnish Admin</title>
+    <meta name="description" content="Admin login for LuxeFurnish furniture management system.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+    <div class="auth-card glass">
+        <div class="auth-header">
+            <div class="logo">LuxeFurnish</div>
+            <p style="color: var(--text-muted); margin-top: 10px;">Admin Dashboard Access</p>
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter admin username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Login to Dashboard</button>
+        </form>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="index.html" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Back to Store</a>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const authCard = document.querySelector('.auth-card');
+        const user = localStorage.getItem('adminUser');
+
+        if(user) {
+            window.location.replace('admin.html');
+        }
+
+        function logout() {
+            localStorage.removeItem('adminUser');
+            location.reload();
+        }
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('adminUser', data.username);
+                    window.location.href = 'admin.html';
+                } else {
+                    alert(data.message || 'Login failed');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Connection error. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

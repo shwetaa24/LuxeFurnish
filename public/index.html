@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuxeFurnish | Modern Elegance for Your Home</title>
+    <meta name="description" content="Discover premium, luxury furniture for modern living. Curated designs that blend comfort with sophistication.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav id="navbar">
+        <div class="logo">LuxeFurnish</div>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="collections.html">Collections</a></li>
+
+            <li><a href="contact.html">Contact</a></li>
+            <li id="userAuthLink"><a href="user-login.html" style="color: var(--primary);">Login</a></li>
+            <li><a href="login.html" class="btn btn-outline" style="padding: 8px 20px;">Admin</a></li>
+        </ul>
+    </nav>
+
+    <header class="hero" id="home">
+        <div class="hero-content">
+            <h1>Elevate Your Living Space</h1>
+            <p>Experience the perfect harmony of luxury and comfort with our handcrafted furniture collections.</p>
+            <div style="display: flex; gap: 20px;">
+                <a href="#collections" class="btn btn-primary">Shop Collection</a>
+
+            </div>
+        </div>
+    </header>
+
+
+
+
+
+    <footer style="padding: 50px 10%; text-align: center; border-top: 1px solid var(--glass-border);">
+        <div class="logo" style="margin-bottom: 20px;">LuxeFurnish</div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">&copy; 2024 LuxeFurnish Interiors. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Check if user is logged in to update navigation
+        const user = localStorage.getItem('adminUser');
+        if(user) {
+            const adminLink = document.querySelector('a[href="login.html"]');
+            if(adminLink) {
+                adminLink.textContent = 'Admin';
+                adminLink.href = 'admin.html';
+            }
+        }
+
+        // Check if regular user is logged in
+        const currentUser = localStorage.getItem('currentUser');
+        if(currentUser) {
+            const userAuthLink = document.getElementById('userAuthLink');
+            if(userAuthLink) {
+                userAuthLink.innerHTML = `<span style="color: var(--primary);"><i class="fas fa-user"></i> ${currentUser}</span>`;
+                userAuthLink.style.cursor = 'pointer';
+                userAuthLink.onclick = () => {
+                    if(confirm('Do you want to logout?')) {
+                        localStorage.removeItem('currentUser');
+                        location.reload();
+                    }
+                };
+            }
+        }
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+
+
+
+    </script>
+</body>
+</html>

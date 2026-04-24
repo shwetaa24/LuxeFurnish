@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login | LuxeFurnish</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page" style="background: linear-gradient(45deg, #1a1a1a, #2c3e50);">
+    <div class="auth-card glass">
+        <div class="auth-header">
+            <div class="logo">LuxeFurnish</div>
+            <p style="color: var(--text-muted); margin-top: 10px;">Customer Sign In</p>
+        </div>
+        <form id="userLoginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Sign In</button>
+        </form>
+        <div style="text-align: center; margin-top: 20px;">
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Not a customer? <a href="index.html" style="color: var(--primary); text-decoration: none;">Browse Store</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Check if already logged in as user
+        if(localStorage.getItem('currentUser')) {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById('userLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/user-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('currentUser', data.username);
+                    window.location.href = 'index.html';
+                } else {
+                    alert(data.message || 'Login failed');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Connection error. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

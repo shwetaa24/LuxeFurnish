@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | LuxeFurnish</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">LuxeFurnish</div>
+            <ul class="sidebar-links">
+                <li><a href="#" class="active" onclick="showSection('overview')"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="#" onclick="showSection('inventory')"><i class="fas fa-chair"></i> Inventory</a></li>
+                <li><a href="#" onclick="showSection('inquiries')"><i class="fas fa-envelope"></i> Inquiries</a></li>
+                <li style="margin-top: 30px;"><hr style="border: 0; border-top: 1px solid var(--glass-border); margin-bottom: 20px;"></li>
+                <li><a href="index.html"><i class="fas fa-store"></i> View Store</a></li>
+                <li style="margin-top: 20px;"><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-main">
+            <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+                <h1 id="sectionTitle">Dashboard Overview</h1>
+                <div class="user-info glass" style="padding: 10px 20px; border-radius: 50px;">
+                    <i class="fas fa-user-circle"></i> <span id="adminDisplay">Admin</span>
+                </div>
+            </header>
+
+            <!-- Stats Overview (Always visible on Dashboard) -->
+            <div id="overviewSection">
+                <div class="stats-grid">
+                    <div class="stat-card glass">
+                        <h4>Total Items</h4>
+                        <div class="value" id="totalItems">0</div>
+                    </div>
+                    <div class="stat-card glass">
+                        <h4>Total Inquiries</h4>
+                        <div class="value" id="totalCustomers">0</div>
+                    </div>
+                    <div class="stat-card glass">
+                        <h4>Pending Actions</h4>
+                        <div class="value" style="color: var(--primary);">12</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Section -->
+            <div id="inventorySection" style="display: none;">
+                <div class="inventory-section glass" style="padding: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>Product Inventory</h3>
+                        <button class="btn btn-primary btn-sm" onclick="toggleAddForm()">+ Add New Item</button>
+                    </div>
+
+                    <div id="addFurnitureForm" style="display: none; margin-bottom: 30px; border-bottom: 1px solid var(--glass-border); padding-bottom: 30px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <input type="text" id="itemName" placeholder="Item Name" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 12px; color: white; border-radius: 8px;">
+                            <input type="text" id="itemCategory" placeholder="Category" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 12px; color: white; border-radius: 8px;">
+                            <input type="number" id="itemPrice" placeholder="Price" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 12px; color: white; border-radius: 8px;">
+                            <input type="number" id="itemStock" placeholder="Stock" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); padding: 12px; color: white; border-radius: 8px;">
+                            <button class="btn btn-primary" onclick="addFurniture()">Save Item</button>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--glass-border); color: var(--text-muted);">
+                                    <th style="padding: 15px;">Name</th>
+                                    <th style="padding: 15px;">Category</th>
+                                    <th style="padding: 15px;">Price</th>
+                                    <th style="padding: 15px;">Stock Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inquiries Section -->
+            <div id="inquiriesSection" style="display: none;">
+                <div class="inventory-section glass" style="padding: 30px;">
+                    <h3 style="margin-bottom: 20px;">Customer Inquiries</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--glass-border); color: var(--text-muted);">
+                                    <th style="padding: 15px;">Customer Name</th>
+                                    <th style="padding: 15px;">Email</th>
+                                    <th style="padding: 15px;">Phone</th>
+                                    <th style="padding: 15px;">Message/Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inquiriesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check Auth
+        const user = localStorage.getItem('adminUser');
+        if(!user) window.location.href = 'login.html';
+        document.getElementById('adminDisplay').textContent = user;
+
+        function logout() {
+            localStorage.removeItem('adminUser');
+            window.location.href = 'login.html';
+        }
+
+        function showSection(sectionId) {
+            // Update Title
+            const titles = {
+                'overview': 'Dashboard Overview',
+                'inventory': 'Inventory Management',
+                'inquiries': 'Customer Inquiries'
+            };
+            document.getElementById('sectionTitle').textContent = titles[sectionId];
+
+            // Toggle Sections
+            document.getElementById('overviewSection').style.display = sectionId === 'overview' ? 'block' : 'none';
+            document.getElementById('inventorySection').style.display = sectionId === 'inventory' ? 'block' : 'none';
+            document.getElementById('inquiriesSection').style.display = sectionId === 'inquiries' ? 'block' : 'none';
+
+            // Update Sidebar Active Link
+            document.querySelectorAll('.sidebar-links a').forEach(link => {
+                link.classList.remove('active');
+                if (link.textContent.toLowerCase().includes(sectionId === 'overview' ? 'dashboard' : sectionId)) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        function toggleAddForm() {
+            const form = document.getElementById('addFurnitureForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch(`/api/all-data?admin=${user}`);
+                const data = await response.json();
+                
+                document.getElementById('totalItems').textContent = data.stock.length;
+                document.getElementById('totalCustomers').textContent = data.customers.length;
+
+                // Populate Inventory
+                const invTable = document.getElementById('inventoryTable');
+                invTable.innerHTML = '';
+                data.stock.forEach(item => {
+                    const stockStatus = item.stock < 5 ? `<span style="color: var(--accent);">Low Stock (${item.stock})</span>` : item.stock;
+                    invTable.innerHTML += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                            <td style="padding: 15px; font-weight: 600;">${item.name}</td>
+                            <td style="padding: 15px;">${item.category}</td>
+                            <td style="padding: 15px; color: var(--primary);">$${item.price.toLocaleString()}</td>
+                            <td style="padding: 15px;">${stockStatus}</td>
+                        </tr>
+                    `;
+                });
+
+                // Populate Inquiries
+                const inqTable = document.getElementById('inquiriesTable');
+                inqTable.innerHTML = '';
+                data.customers.forEach(customer => {
+                    inqTable.innerHTML += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                            <td style="padding: 15px; font-weight: 600;">${customer.fullName}</td>
+                            <td style="padding: 15px;">${customer.email}</td>
+                            <td style="padding: 15px;">${customer.phone}</td>
+                            <td style="padding: 15px; color: var(--text-muted); font-size: 0.9rem;">${customer.address}</td>
+                        </tr>
+                    `;
+                });
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        async function addFurniture() {
+            const item = {
+                name: document.getElementById('itemName').value,
+                category: document.getElementById('itemCategory').value,
+                price: parseFloat(document.getElementById('itemPrice').value),
+                stock: parseInt(document.getElementById('itemStock').value),
+                admin: user // Associate with current admin
+            };
+
+            if(!item.name || !item.price) return alert('Please fill in required fields');
+
+            try {
+                const response = await fetch('/api/furniture', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                });
+                if(response.ok) {
+                    toggleAddForm();
+                    fetchData();
+                    // Clear inputs
+                    document.getElementById('itemName').value = '';
+                    document.getElementById('itemCategory').value = '';
+                    document.getElementById('itemPrice').value = '';
+                    document.getElementById('itemStock').value = '';
+                }
+            } catch (error) {
+                console.error('Error adding furniture:', error);
+            }
+        }
+
+        fetchData();
+        // Set initial view
+        showSection('overview');
+    </script>
+</body>
+</html>
