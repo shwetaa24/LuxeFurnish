@@ -16,7 +16,29 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-and-push-docker:
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: cd backend && npm install
+
+      - name: Syntax Check
+        run: cd backend && node --check server.js
+
+  build:
+    name: 🏗️ Build & Push Docker
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: read
