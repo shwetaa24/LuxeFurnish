@@ -59,12 +59,71 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  # --- AWS DEPLOYMENT (PLACEHOLDER) ---
+  # --- AWS DEPLOYMENT ---
   aws-deploy:
-    name: "☁️ AWS: Deploy to App Runner"
+    name: "☁️ AWS: Deploy to EC2"
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: "Status"
-        run: echo "Ready for AWS Deployment. Please add AWS credentials to secrets."
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Install Docker if not present
+            if ! [ -x "$(command -v docker)" ]; then
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker ubuntu
+            fi
+            
+            # Install Docker Compose if not present
+            if ! [ -x "$(command -v docker-compose)" ]; then
+              sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+
+      - name: Copy docker-compose.yml to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "~/app"
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: REGISTRY,GITHUB_REPOSITORY,GITHUB_SHA
+          script: |
+            cd ~/app
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            
+            # Create .env file with secrets
+            cat <<EOF > .env
+            NODE_ENV=production
+            PORT=3000
+            SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+            SMTP_EMAILS=${{ secrets.SMTP_EMAILS }}
+            SMTP_PASSWORDS=${{ secrets.SMTP_PASSWORDS }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_REGION=${{ env.AWS_REGION }}
+            IMAGE_TAG=${{ env.REGISTRY }}/${{ github.repository }}-backend:latest
+            EOF
+
+            docker-compose pull
+            docker-compose up -d --remove-orphans

@@ -1,5 +1,6 @@
 services:
   app:
+    image: ${IMAGE_TAG:-luxefurnish-backend:latest}
     build:
       context: .
       dockerfile: ./backend/Dockerfile
@@ -8,7 +9,8 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-3000}
-      - MONGO_URI=${MONGO_URI}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
       - SMTP_EMAILS=${SMTP_EMAILS}
       - SMTP_PASSWORDS=${SMTP_PASSWORDS}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
