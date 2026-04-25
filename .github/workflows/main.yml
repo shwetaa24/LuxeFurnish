@@ -1,23 +1,30 @@
-name: Backend CI/CD
+name: Unified CI/CD Pipeline
 
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'backend/**'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'backend/**'
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-backend
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+permissions:
+  contents: read
+  packages: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
-  test:
-    name: 🧪 Run Tests
+  # --- BACKEND JOBS ---
+  backend-test:
+    name: 🧪 Backend: Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -36,14 +43,10 @@ jobs:
       - name: Syntax Check
         run: cd backend && node --check server.js
 
-  build:
-    name: 🏗️ Build & Push Docker
-    needs: test
+  backend-build:
+    name: 🏗️ Backend: Build & Push
+    needs: backend-test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,7 +62,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository }}-backend
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -69,3 +72,28 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  # --- FRONTEND JOBS ---
+  frontend-build:
+    name: 🏗️ Frontend: Build Assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './frontend'
+
+  frontend-deploy:
+    name: 🚀 Frontend: Deploy to Pages
+    needs: frontend-build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
