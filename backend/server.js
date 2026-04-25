@@ -2,61 +2,19 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const nodemailer = require('nodemailer');
-
 const path = require('path');
+
 const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// --- 1. EMAIL CONFIGURATION (MULTIPLE KEYS) ---
-let emails = process.env.SMTP_EMAILS ? process.env.SMTP_EMAILS.split(',') : [];
-let passwords = process.env.SMTP_PASSWORDS ? process.env.SMTP_PASSWORDS.split(',') : [];
-
-// Fallback for single key configuration
-if (emails.length === 0 && process.env.SMTP_EMAIL) {
-    emails = [process.env.SMTP_EMAIL];
-    passwords = [process.env.SMTP_PASSWORD];
-}
-
-const transporters = emails.map((email, index) => {
-    return nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: email.trim(),
-            pass: passwords[index] ? passwords[index].trim() : ''
-        }
-    });
-});
-
-let currentTransporterIndex = 0;
-
-const sendEmail = async (mailOptions) => {
-    if (transporters.length === 0) {
-        console.error("❌ No SMTP transporters configured");
-        return;
-    }
-
-    const transporter = transporters[currentTransporterIndex];
-    currentTransporterIndex = (currentTransporterIndex + 1) % transporters.length;
-
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log(`✅ Email sent using ${transporter.options.auth.user}`);
-        return info;
-    } catch (error) {
-        console.error(`❌ Error sending email:`, error);
-        throw error;
-    }
-};
-
-// 2. Database Connection
+// 1. Database Connection
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("✅ Connected to MongoDB Cluster"))
     .catch(err => console.error("❌ DB Connection Error:", err));
 
-// --- 3. DATA SCHEMAS ---
+// --- 2. DATA SCHEMAS ---
 
 const Furniture = mongoose.model('Furniture', {
     name: String,
@@ -86,7 +44,7 @@ const Admin = mongoose.model('Admin', {
     role: { type: String, default: 'Inventory-Manager' }
 }, 'admins');
 
-// --- 4. API ROUTES ---
+// --- 3. API ROUTES ---
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
@@ -121,36 +79,41 @@ app.post('/api/user-login', async (req, res) => {
 });
 
 app.post('/api/furniture', async (req, res) => {
+    console.log("📥 Received Furniture Data:", req.body);
     try {
         const item = new Furniture(req.body);
         await item.save();
+        console.log("✅ Furniture Saved Successfully!");
         res.json({ success: true, message: "Stock Updated!" });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        console.error("❌ Error saving furniture:", err.message);
+        res.status(500).json({ error: err.message }); 
+    }
 });
 
 app.post('/api/customers', async (req, res) => {
+    console.log("📥 Received Customer Inquiry:", req.body);
     try {
         const customer = new Customer(req.body);
         await customer.save();
-
-        const mailOptions = {
-            from: transporters[currentTransporterIndex % transporters.length].options.auth.user,
-            to: customer.email,
-            subject: 'Inquiry Received - LuxeFurnish',
-            text: `Hi ${customer.fullName},\n\nThank you for reaching out! We have received your inquiry.\n\nBest regards,\nLuxeFurnish Team`
-        };
-
-        await sendEmail(mailOptions);
-        res.json({ success: true, message: "Customer Registered & Email Sent!" });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+        console.log("✅ Customer Saved Successfully!");
+        res.json({ success: true, message: "Customer Registered!" });
+    } catch (err) { 
+        console.error("❌ Error saving customer:", err.message);
+        res.status(500).json({ error: err.message }); 
+    }
 });
 
 app.get('/api/all-data', async (req, res) => {
     const { admin } = req.query;
     if (!admin) return res.status(400).json({ error: "Admin username required" });
-    const stock = await Furniture.find({ admin });
-    const customers = await Customer.find({ admin });
-    res.json({ stock, customers });
+    try {
+        const stock = await Furniture.find({ admin });
+        const customers = await Customer.find({ admin });
+        res.json({ stock, customers });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 const PORT = process.env.PORT || 3000;
