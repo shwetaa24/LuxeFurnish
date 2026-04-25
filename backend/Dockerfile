@@ -14,7 +14,7 @@ RUN npm install
 COPY backend/ .
 
 # Copy the frontend code
-COPY frontend/ ./frontend
+COPY frontend/ ../frontend
 
 # Expose the port the app runs on
 EXPOSE 3000

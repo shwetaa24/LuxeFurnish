@@ -8,7 +8,7 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'frontend')));
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // --- 1. EMAIL CONFIGURATION (MULTIPLE KEYS) ---
 let emails = process.env.SMTP_EMAILS ? process.env.SMTP_EMAILS.split(',') : [];
