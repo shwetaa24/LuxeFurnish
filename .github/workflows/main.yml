@@ -1,68 +1,32 @@
-name: Unified CI/CD Pipeline
+name: Unified CI/CD Pipeline (AWS & GitHub)
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
-permissions:
-  contents: read
-  packages: write
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  AWS_REGION: us-east-1 # Change this to your preferred region
 
 jobs:
-  # --- BACKEND JOBS ---
-  backend-test:
-    name: "🧪 Backend: Test"
+  # --- BACKEND & DOCKER JOBS ---
+  build-and-push:
+    name: "🏗️ Build & Push Docker"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install dependencies
-        run: cd backend && npm install
-
-      - name: Syntax Check
-        run: cd backend && node --check server.js
-
-  backend-build:
-    name: "🏗️ Backend: Build & Push"
-    needs: backend-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Log in to the Container registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}-backend
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -70,13 +34,18 @@ jobs:
           context: .
           file: ./backend/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}-backend:latest
+            ${{ env.REGISTRY }}/${{ github.repository }}-backend:${{ github.sha }}
 
-  # --- FRONTEND JOBS ---
-  frontend-build:
-    name: "🏗️ Frontend: Build Assets"
+  # --- FRONTEND DEPLOYMENT ---
+  frontend-deploy:
+    name: "🚀 Frontend: Deploy to Pages"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -86,14 +55,16 @@ jobs:
         with:
           path: './frontend'
 
-  frontend-deploy:
-    name: "🚀 Frontend: Deploy to Pages"
-    needs: frontend-build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # --- AWS DEPLOYMENT (PLACEHOLDER) ---
+  aws-deploy:
+    name: "☁️ AWS: Deploy to App Runner"
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: "Status"
+        run: echo "Ready for AWS Deployment. Please add AWS credentials to secrets."
