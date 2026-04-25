@@ -64,7 +64,7 @@ const Furniture = mongoose.model('Furniture', {
     price: Number,
     stock: Number,
     admin: String
-}, 'Furniture');
+}, 'furnitures');
 
 const Customer = mongoose.model('Customer', {
     fullName: String,
@@ -72,19 +72,19 @@ const Customer = mongoose.model('Customer', {
     email: String,
     address: String,
     admin: { type: String, default: 'admin' }
-}, 'Customers');
+}, 'customers');
 
 const User = mongoose.model('User', {
     username: { type: String, unique: true },
     password: { type: String },
     email: String
-}, 'Users');
+}, 'users');
 
 const Admin = mongoose.model('Admin', {
     username: { type: String, unique: true },
     password: { type: String, default: 'password123' },
     role: { type: String, default: 'Inventory-Manager' }
-}, 'Admins');
+}, 'admins');
 
 // --- 4. API ROUTES ---
 
