@@ -24,7 +24,7 @@ concurrency:
 jobs:
   # --- BACKEND JOBS ---
   backend-test:
-    name: 🧪 Backend: Test
+    name: "🧪 Backend: Test"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -44,7 +44,7 @@ jobs:
         run: cd backend && node --check server.js
 
   backend-build:
-    name: 🏗️ Backend: Build & Push
+    name: "🏗️ Backend: Build & Push"
     needs: backend-test
     runs-on: ubuntu-latest
     steps:
@@ -75,7 +75,7 @@ jobs:
 
   # --- FRONTEND JOBS ---
   frontend-build:
-    name: 🏗️ Frontend: Build Assets
+    name: "🏗️ Frontend: Build Assets"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -87,7 +87,7 @@ jobs:
           path: './frontend'
 
   frontend-deploy:
-    name: 🚀 Frontend: Deploy to Pages
+    name: "🚀 Frontend: Deploy to Pages"
     needs: frontend-build
     runs-on: ubuntu-latest
     environment:
