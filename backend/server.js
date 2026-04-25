@@ -4,10 +4,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 
+const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'frontend')));
 
 // --- 1. EMAIL CONFIGURATION (MULTIPLE KEYS) ---
 let emails = process.env.SMTP_EMAILS ? process.env.SMTP_EMAILS.split(',') : [];

@@ -1,41 +1,22 @@
-name: CI/CD Pipeline
+name: Backend CI/CD
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'backend/**'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'backend/**'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}-backend
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      # - name: Run tests
-      #   run: npm test
-      #   env:
-      #     MONGO_URI: ${{ secrets.MONGO_URI }}
-      #     SMTP_EMAILS: ${{ secrets.SMTP_EMAILS }}
-      #     SMTP_PASSWORDS: ${{ secrets.SMTP_PASSWORDS }}
-
   build-and-push-docker:
-    needs: build-and-test
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -62,16 +43,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./backend/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  # deploy:
-  #   needs: build-and-push-docker
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main'
-  #   steps:
-  #     - name: Deploy to Server
-  #       run: |
-  #         echo "Deployment step placeholder"
-  #         # Example: SSH into server and run docker-compose pull && docker-compose up -d
