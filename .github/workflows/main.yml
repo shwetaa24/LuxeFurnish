@@ -130,5 +130,6 @@ jobs:
             IMAGE_TAG=${{ env.REGISTRY }}/${REPO_LOWER}-backend:latest
             EOF
 
+            docker-compose down
             docker-compose pull
             docker-compose up -d --remove-orphans
